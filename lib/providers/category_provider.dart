@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project/models/category.dart';
 
 class CategoryProvider extends ChangeNotifier {
-  List<Category> _categories = DefaultCategories.categories;
+  final List<Category> _categories = DefaultCategories.categories;
   String? _selectedCategoryId;
 
   List<Category> get categories => _categories;

@@ -10,6 +10,7 @@ class AppRoutes {
   static const String expenseDetail = '/expense-detail';
   static const String statistics = '/statistics';
   static const String profile = '/profile';
+  static const String editProfile = '/edit-profile';
   static const String categories = '/categories';
 
   static Map<String, WidgetBuilder> getRoutes() {

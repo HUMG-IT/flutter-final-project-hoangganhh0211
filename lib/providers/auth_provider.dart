@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/models/user.dart';
-import 'package:flutter_project/services/auth_service.dart';
+import 'package:flutter_project/services/supabase_auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final AuthService _authService = AuthService();
+  final SupabaseAuthService _authService = SupabaseAuthService();
 
   User? _currentUser;
   bool _isLoading = false;
@@ -30,29 +30,57 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> login(String email, String name) async {
+  Future<bool> login(String email, String password) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final user = User(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: name,
-        email: email,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      final user = await _authService.login(email, password);
 
-      await _authService.saveUser(user);
+      if (user == null) {
+        _error = 'Email hoặc mật khẩu không đúng';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
       _currentUser = user;
       _isLoading = false;
       notifyListeners();
+      return true;
     } catch (e) {
-      _error = e.toString();
+      _error = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
       notifyListeners();
-      rethrow;
+      return false;
+    }
+  }
+
+  Future<bool> register(String name, String email, String password) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final user = await _authService.register(name, email, password);
+
+      if (user == null) {
+        _error = 'Email đã được sử dụng';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      _currentUser = user;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
@@ -95,6 +123,30 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       rethrow;
+    }
+  }
+
+  Future<bool> changePassword(String oldPassword, String newPassword) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final success =
+          await _authService.changePassword(oldPassword, newPassword);
+
+      if (success) {
+        _currentUser = await _authService.getCurrentUser();
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 }

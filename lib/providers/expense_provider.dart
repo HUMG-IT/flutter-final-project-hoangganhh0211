@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/models/expense.dart';
-import 'package:flutter_project/services/database/localstore_service.dart';
+import 'package:flutter_project/services/supabase_expense_service.dart';
 import 'package:flutter_project/services/database/database_helper.dart';
+import 'dart:async';
 
 class ExpenseProvider extends ChangeNotifier {
-  final LocalstoreService _localstoreService = LocalstoreService();
+  final SupabaseExpenseService _supabaseService = SupabaseExpenseService();
 
   List<Expense> _expenses = [];
   bool _isLoading = false;
   String? _error;
+  StreamSubscription<List<Expense>>? _expensesSubscription;
 
   String? _selectedCategoryId;
   DateTime? _startDate;
@@ -54,9 +56,17 @@ class ExpenseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _expenses = await _localstoreService.getAllExpenses();
-      _isLoading = false;
-      notifyListeners();
+      _expensesSubscription?.cancel();
+      _expensesSubscription =
+          _supabaseService.getExpensesStream().listen((expenses) {
+        _expenses = expenses;
+        _isLoading = false;
+        notifyListeners();
+      }, onError: (error) {
+        _error = error.toString();
+        _isLoading = false;
+        notifyListeners();
+      });
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
@@ -66,9 +76,8 @@ class ExpenseProvider extends ChangeNotifier {
 
   Future<void> addExpense(Expense expense) async {
     try {
-      await _localstoreService.saveExpense(expense);
-      _expenses.add(expense);
-      notifyListeners();
+      await _supabaseService.addExpense(expense);
+      await loadExpenses();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -78,12 +87,8 @@ class ExpenseProvider extends ChangeNotifier {
 
   Future<void> updateExpense(Expense expense) async {
     try {
-      await _localstoreService.updateExpense(expense);
-      final index = _expenses.indexWhere((e) => e.id == expense.id);
-      if (index != -1) {
-        _expenses[index] = expense;
-        notifyListeners();
-      }
+      await _supabaseService.updateExpense(expense);
+      await loadExpenses();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -93,9 +98,8 @@ class ExpenseProvider extends ChangeNotifier {
 
   Future<void> deleteExpense(String id) async {
     try {
-      await _localstoreService.deleteExpense(id);
-      _expenses.removeWhere((e) => e.id == id);
-      notifyListeners();
+      await _supabaseService.deleteExpense(id);
+      await loadExpenses();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -105,9 +109,10 @@ class ExpenseProvider extends ChangeNotifier {
 
   Future<void> deleteAllExpenses() async {
     try {
-      await _localstoreService.deleteAllExpenses();
-      _expenses.clear();
-      notifyListeners();
+      final expenses = await _supabaseService.getAllExpenses();
+      for (final expense in expenses) {
+        await _supabaseService.deleteExpense(expense.id);
+      }
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -158,5 +163,11 @@ class ExpenseProvider extends ChangeNotifier {
 
   List<Expense> getExpensesForYear() {
     return DatabaseHelper.getExpensesForYear(_expenses);
+  }
+
+  @override
+  void dispose() {
+    _expensesSubscription?.cancel();
+    super.dispose();
   }
 }

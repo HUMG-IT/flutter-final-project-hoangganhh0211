@@ -28,11 +28,11 @@ class Expense {
       id: json['id'] as String,
       title: json['title'] as String,
       amount: (json['amount'] as num).toDouble(),
-      categoryId: json['categoryId'] as String,
+      categoryId: json['category_id'] as String,
       date: DateTime.parse(json['date'] as String),
       description: json['description'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
 
@@ -41,11 +41,11 @@ class Expense {
       'id': id,
       'title': title,
       'amount': amount,
-      'categoryId': categoryId,
+      'category_id': categoryId,
       'date': date.toIso8601String(),
       'description': description,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 
@@ -69,29 +69,6 @@ class Expense {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is Expense &&
-        other.id == id &&
-        other.title == title &&
-        other.amount == amount &&
-        other.categoryId == categoryId &&
-        other.date == date &&
-        other.description == description;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        title.hashCode ^
-        amount.hashCode ^
-        categoryId.hashCode ^
-        date.hashCode ^
-        description.hashCode;
   }
 
   @override

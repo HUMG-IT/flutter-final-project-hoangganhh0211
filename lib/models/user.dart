@@ -2,6 +2,7 @@ class User {
   final String id;
   final String name;
   final String email;
+  final String passwordHash;
   final String? avatarUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -10,9 +11,10 @@ class User {
     required this.id,
     required this.name,
     required this.email,
-    this.avatarUrl,
+    required this.passwordHash,
     required this.createdAt,
     required this.updatedAt,
+    this.avatarUrl,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -20,9 +22,10 @@ class User {
       id: json['id'] as String,
       name: json['name'] as String,
       email: json['email'] as String,
-      avatarUrl: json['avatarUrl'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      passwordHash: json['password_hash'] as String? ?? '',
+      avatarUrl: json['avatar_url'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
 
@@ -31,9 +34,10 @@ class User {
       'id': id,
       'name': name,
       'email': email,
-      'avatarUrl': avatarUrl,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'password_hash': passwordHash,
+      'avatar_url': avatarUrl,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 
@@ -41,6 +45,7 @@ class User {
     String? id,
     String? name,
     String? email,
+    String? passwordHash,
     String? avatarUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -49,30 +54,13 @@ class User {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      passwordHash: passwordHash ?? this.passwordHash,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? DateTime.now(),
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is User &&
-        other.id == id &&
-        other.name == name &&
-        other.email == email &&
-        other.avatarUrl == avatarUrl;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^ name.hashCode ^ email.hashCode ^ avatarUrl.hashCode;
-  }
-
-  @override
-  String toString() {
-    return 'User(id: $id, name: $name, email: $email)';
-  }
+  String toString() => 'User(id: $id, name: $name, email: $email)';
 }
